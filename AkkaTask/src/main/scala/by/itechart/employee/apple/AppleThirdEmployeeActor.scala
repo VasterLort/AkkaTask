@@ -17,6 +17,7 @@ class AppleThirdEmployeeActor(context: ActorContext[String]) extends AbstractBeh
         println("My name is AppleThirdEmployeeActor")
         this
     }
+
   override def onSignal: PartialFunction[Signal, Behavior[String]] = {
     case PostStop =>
       println("AppleThirdEmployeeActor stopped")
