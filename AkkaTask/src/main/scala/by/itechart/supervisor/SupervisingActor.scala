@@ -19,13 +19,13 @@ class SupervisingActor(context: ActorContext[String]) extends AbstractBehavior[S
 
   override def onMessage(msg: String): Behavior[String] =
     msg match {
-      case "startApple" =>
+      case "appleStart" =>
         child1 ! "secondChild"
         this
-      case "startIbm" =>
+      case "ibmStart" =>
         child2 ! "firstChild"
         this
-      case "startItechart" =>
+      case "itechartStart" =>
         child3 ! "thirdChild"
         this
       case "stop" => Behaviors.stopped
