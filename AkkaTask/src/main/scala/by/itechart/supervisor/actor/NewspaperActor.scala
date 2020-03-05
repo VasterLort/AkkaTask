@@ -19,7 +19,7 @@ class NewspaperActor(context: ActorContext[Message]) extends AbstractBehavior[Me
         context.log.info(s"New user ${message.userName} was created!")
         this
       case message: CountUserMessages =>
-        println(s"${message.userName} has eaten  ${message.counter} meals!")
+        context.log.info(s"${message.userName} has eaten  ${message.counter} meals!")
         this
       case message: PrintAmountCompanyMessages =>
         context.log.info(s"Company ${message.companyName} users have eaten ${message.counter} meals so far!")

@@ -2,7 +2,7 @@ package by.itechart
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.typed.ActorSystem
-import by.itechart.action.{CreateCompany, CreateUser, Message, SendMessageToCompany, SendMessageToUser}
+import by.itechart.action._
 import by.itechart.supervisor.SupervisorActor
 import org.scalatest.wordspec.AnyWordSpecLike
 
