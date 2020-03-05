@@ -1,7 +1,7 @@
 package by.itechart
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import akka.actor.typed.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import by.itechart.action._
 import by.itechart.supervisor.SupervisorActor
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -9,7 +9,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 class MainTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "Supervising actor" must {
     "system startup" in {
-      val testSystem = ActorSystem[Message](SupervisorActor(), "supervisor-actor")
+      val system = ActorSystem("system")
+      val testSystem = system.actorOf(Props[SupervisorActor], "supervisor-actor")
       testSystem ! CreateCompany("Apple")
       testSystem ! CreateCompany("Ibm")
       testSystem ! CreateCompany("Epam")
