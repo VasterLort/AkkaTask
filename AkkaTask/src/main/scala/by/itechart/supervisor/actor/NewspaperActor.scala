@@ -13,16 +13,16 @@ class NewspaperActor(context: ActorContext[Message]) extends AbstractBehavior[Me
   override def onMessage(msg: Message): Behavior[Message] =
     msg match {
       case message: CreateCompany =>
-        println(s"New company ${message.companyName} was created!")
+        context.log.info(s"New company ${message.companyName} was created!")
         this
       case message: CreateUser =>
-        println(s"New user ${message.userName} was created!")
+        context.log.info(s"New user ${message.userName} was created!")
         this
       case message: CountUserMessages =>
         println(s"${message.userName} has eaten  ${message.counter} meals!")
         this
       case message: PrintAmountCompanyMessages =>
-        println(s"Company ${message.companyName} users have eaten ${message.counter} meals so far!")
+        context.log.info(s"Company ${message.companyName} users have eaten ${message.counter} meals so far!")
         this
     }
 }

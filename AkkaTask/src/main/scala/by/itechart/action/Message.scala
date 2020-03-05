@@ -19,4 +19,3 @@ case class UpdateUserMessage(messageToUser: SendMessageToUser, newspaperActor: A
 case class CountUserMessages(userName: String, counter: Int) extends Message
 
 case class PrintAmountCompanyMessages(companyName: String, counter: Int) extends Message
-

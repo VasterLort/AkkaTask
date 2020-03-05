@@ -7,8 +7,6 @@ import by.itechart.action._
 object CompanyActor {
   def apply(): Behavior[Message] =
     Behaviors.setup(context => new CompanyActor(context))
-
-
 }
 
 class CompanyActor(context: ActorContext[Message]) extends AbstractBehavior[Message](context) {
@@ -36,10 +34,10 @@ class CompanyActor(context: ActorContext[Message]) extends AbstractBehavior[Mess
 
   override def onSignal: PartialFunction[Signal, Behavior[Message]] = {
     case PreRestart =>
-      println("supervised CompanyActor will be restarted")
+      context.log.info("supervised CompanyActor will be restarted")
       this
     case PostStop =>
-      println("supervised CompanyActor stopped")
+      context.log.info("supervised CompanyActor stopped")
       this
   }
 }

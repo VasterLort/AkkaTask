@@ -22,7 +22,7 @@ class UserActor(context: ActorContext[Message]) extends AbstractBehavior[Message
 
   override def onSignal: PartialFunction[Signal, Behavior[Message]] = {
     case PostStop =>
-      println("UserActor stopped")
+      context.log.info("UserActor stopped")
       this
   }
 }
