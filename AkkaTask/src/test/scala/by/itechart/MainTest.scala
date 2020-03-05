@@ -41,6 +41,8 @@ class MainTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       testSystem ! SendMessageToCompany("Apple")
       testSystem ! SendMessageToCompany("Ibm")
       testSystem ! SendMessageToCompany("Epam")
+
+      Thread.sleep(5000)
     }
   }
 }

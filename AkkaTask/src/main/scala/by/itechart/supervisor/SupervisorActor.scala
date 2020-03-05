@@ -10,7 +10,7 @@ class SupervisorActor extends Actor with ActorLogging {
 
   def receive = {
     case message: CreateCompany =>
-      val ref = context.actorOf(Props[CompanyActor], name = message.companyName)
+      val ref = context.actorOf(Props(new CompanyActor(message.companyName)), name = message.companyName)
       newspaper ! message
       companyNameToActor += message.companyName -> ref
     case message: CreateUser =>
