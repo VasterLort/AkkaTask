@@ -1,28 +1,35 @@
 package by.itechart.supervisor.actor
 
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import akka.actor.typed.{Behavior, PostStop, Signal}
-import by.itechart.action.{CountUserMessages, Message, UpdateUserMessage}
+import akka.actor.ActorLogging
+import akka.persistence.{PersistentActor, SnapshotOffer}
+import by.itechart.action.{CountUserMessages, UpdateMessageForUser, UpdateUserCounter}
+import by.itechart.event.{CounterIncrementEvent, CounterResetEvent, Event}
 
-object UserActor {
-  def apply(): Behavior[Message] =
-    Behaviors.setup(new UserActor(_))
+
+case class UserCounter(count: Int) {
+  def update(evt: Event) = evt match {
+    case CounterIncrementEvent() => copy(count + 1)
+    case CounterResetEvent() => copy(0)
+  }
 }
 
-class UserActor(context: ActorContext[Message]) extends AbstractBehavior[Message](context) {
-  private var count = 0
+class UserActor(name: String) extends PersistentActor with ActorLogging {
+  var state = UserCounter(0)
 
-  override def onMessage(msg: Message): Behavior[Message] =
-    msg match {
-      case message: UpdateUserMessage =>
-        count += 1
-        message.newspaperActor ! CountUserMessages(message.messageToUser.userName, count)
-        this
-    }
+  def updateState(event: Event) = state = state.update(event)
 
-  override def onSignal: PartialFunction[Signal, Behavior[Message]] = {
-    case PostStop =>
-      context.log.info("UserActor stopped")
-      this
+  override def persistenceId: String = name
+
+  override def receiveRecover: Receive = {
+    case evt: Event => updateState(evt)
+    case SnapshotOffer(_, snapshot: UserCounter) => state = snapshot
+  }
+
+  override def receiveCommand: Receive = {
+    case _: UpdateMessageForUser =>
+      persist(CounterIncrementEvent())(updateState)
+      saveSnapshot(state)
+    case message: UpdateUserCounter =>
+      message.newspaperActor ! CountUserMessages(message.m.userName, state.count)
   }
 }
