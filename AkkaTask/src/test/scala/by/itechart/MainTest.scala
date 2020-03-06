@@ -46,7 +46,7 @@ class MainTest extends TestKit(ActorSystem("system")) with AnyWordSpecLike {
       testSystem ! PrintUserCounter("Ibm", "Sdsd")
       testSystem ! PrintUserCounter("Apple", "Jin2")
 
-      Thread.sleep(5000)
+      Thread.sleep(2000)
 
       TestKit.shutdownActorSystem(system)
     }
