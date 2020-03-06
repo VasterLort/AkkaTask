@@ -1,25 +1,47 @@
 package by.itechart.supervisor.actor
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.persistence.{PersistentActor, SnapshotOffer}
 import by.itechart.action._
+import by.itechart.event.{CounterIncrementEvent, CounterResetEvent, Event}
 
-class CompanyActor(name: String) extends Actor with ActorLogging {
+case class CompanyCounter(count: Int) {
+  def update(evt: Event) = evt match {
+    case CounterIncrementEvent() => copy(count + 1)
+    case CounterResetEvent() => copy(0)
+  }
+}
+
+class CompanyActor(name: String) extends PersistentActor with ActorLogging {
   private var userNameToActor = Map.empty[String, ActorRef]
-  private var count = 0
+  var state = CompanyCounter(0)
 
-  def receive = {
+  def updateState(event: Event) = state = state.update(event)
+
+  override def persistenceId: String = name
+
+  override def receiveRecover: Receive = {
+    case evt: Event => updateState(evt)
+    case SnapshotOffer(_, snapshot: CompanyCounter) => state = snapshot
+  }
+
+  override def receiveCommand: Receive = {
     case message: CreateUser => {
-      val ref = context.actorOf(Props[UserActor], name = message.userName)
+      val ref = context.actorOf(Props(new UserActor(message.userName)), name = message.userName)
       userNameToActor += message.userName -> ref
     }
-    case message: UpdateUserMessage => {
+    case message: UpdateMessageForUser => {
       val userActor = userNameToActor(message.messageToUser.userName)
       userActor ! message
-      count += 1
+      persist(CounterIncrementEvent())(updateState)
+      saveSnapshot(state)
     }
-    case message: UpdateCompanyMessage => {
-      message.newspaperActor ! PrintAmountCompanyMessages(message.messageToCompany.companyName, count)
-    }
+    case message: UpdateUserCounter =>
+      val userActor = userNameToActor(message.m.userName)
+      userActor ! message
+
+    case message: UpdateCompanyCounter =>
+      message.newspaperActor ! CountCompanyMessages(message.m.companyName, state.count)
   }
 }
 

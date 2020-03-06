@@ -19,9 +19,12 @@ class SupervisorActor extends Actor with ActorLogging {
       companyActor ! message
     case message: SendMessageToUser =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! UpdateUserMessage(message, newspaper)
-    case message: SendMessageToCompany =>
+      companyActor ! UpdateMessageForUser(message, newspaper)
+    case message: PrintCompanyCounter =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! UpdateCompanyMessage(message, newspaper)
+      companyActor ! UpdateCompanyCounter(message, newspaper)
+    case message: PrintUserCounter =>
+      val companyActor = companyNameToActor(message.companyName)
+      companyActor ! UpdateUserCounter(message, newspaper)
   }
 }

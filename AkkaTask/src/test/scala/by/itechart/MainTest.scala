@@ -38,9 +38,15 @@ class MainTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       testSystem ! SendMessageToUser("Apple", "Jin2")
       testSystem ! SendMessageToUser("Ibm", "Jin1")
 
-      testSystem ! SendMessageToCompany("Apple")
-      testSystem ! SendMessageToCompany("Ibm")
-      testSystem ! SendMessageToCompany("Epam")
+      testSystem ! PrintCompanyCounter("Apple")
+      testSystem ! PrintCompanyCounter("Ibm")
+      testSystem ! PrintCompanyCounter("Epam")
+
+      testSystem ! PrintUserCounter("Epam", "Dfdf")
+      testSystem ! PrintUserCounter("Ibm", "Jin1")
+      testSystem ! PrintUserCounter("Ibm", "Sdsd")
+      testSystem ! PrintUserCounter("Apple", "Jin2")
+
 
       Thread.sleep(5000)
     }
