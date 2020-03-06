@@ -1,15 +1,14 @@
 package by.itechart
 
-import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.{ActorSystem, Props}
+import akka.testkit.TestKit
 import by.itechart.action._
 import by.itechart.supervisor.SupervisorActor
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class MainTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+class MainTest extends TestKit(ActorSystem("system")) with AnyWordSpecLike {
   "Supervising actor" must {
     "system startup" in {
-      val system = ActorSystem("system")
       val testSystem = system.actorOf(Props[SupervisorActor], "supervisor-actor")
       testSystem ! CreateCompany("Apple")
       testSystem ! CreateCompany("Ibm")
@@ -47,8 +46,9 @@ class MainTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       testSystem ! PrintUserCounter("Ibm", "Sdsd")
       testSystem ! PrintUserCounter("Apple", "Jin2")
 
-
       Thread.sleep(5000)
+
+      TestKit.shutdownActorSystem(system)
     }
   }
 }
