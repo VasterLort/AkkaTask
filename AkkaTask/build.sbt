@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-slf4j" % "2.6.3",
   "ch.megard" %% "akka-http-cors" % "0.4.2",
 )
-
+libraryDependencies += "co.pragmati" %% "swagger-ui-akka-http" % "1.3.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.6.3"
 libraryDependencies += "com.typesafe.akka" %% "akka-actor-typed" % "2.6.3"
 libraryDependencies += "com.typesafe.akka" %% "akka-persistence-typed" % "2.6.3"

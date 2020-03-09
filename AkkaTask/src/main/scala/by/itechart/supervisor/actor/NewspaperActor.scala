@@ -11,7 +11,9 @@ class NewspaperActor extends Actor with ActorLogging {
       log.info(s"New user ${message.userName} was created!")
     case message: CountUserMessages =>
       log.info(s"${message.userName} has eaten  ${message.counter} meals!")
+      message.counter.toString
     case message: CountCompanyMessages =>
       log.info(s"Company ${message.companyName} users have eaten ${message.counter} meals so far!")
+      sender ! GetCount(message.counter)
   }
 }

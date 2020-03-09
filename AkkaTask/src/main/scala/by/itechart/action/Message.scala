@@ -24,3 +24,4 @@ case class UpdateCompanyCounter(m: PrintCompanyCounter, newspaperActor: ActorRef
 
 case class UpdateUserCounter(m: PrintUserCounter, newspaperActor: ActorRef) extends Message
 
+case class GetCount(count: Int) extends Message

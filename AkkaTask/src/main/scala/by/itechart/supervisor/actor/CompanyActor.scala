@@ -1,9 +1,13 @@
 package by.itechart.supervisor.actor
 
 import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.pattern.ask
 import akka.persistence.{PersistentActor, SnapshotOffer}
+import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.event.{CounterIncrementEvent, CounterResetEvent, Event}
+
+import scala.concurrent.duration._
 
 case class CompanyCounter(count: Int) {
   def update(evt: Event) = evt match {
@@ -13,6 +17,7 @@ case class CompanyCounter(count: Int) {
 }
 
 class CompanyActor(name: String) extends PersistentActor with ActorLogging {
+  implicit val timeout = Timeout(10.seconds)
   private var userNameToActor = Map.empty[String, ActorRef]
   var state = CompanyCounter(0)
 
@@ -38,10 +43,11 @@ class CompanyActor(name: String) extends PersistentActor with ActorLogging {
     }
     case message: UpdateUserCounter =>
       val userActor = userNameToActor(message.m.userName)
-      userActor ! message
+      (userActor ? message).mapTo[String]
 
     case message: UpdateCompanyCounter =>
-      message.newspaperActor ! CountCompanyMessages(message.m.companyName, state.count)
+      val result = (message.newspaperActor ? CountCompanyMessages(message.m.companyName, state.count))
+      sender ! result
   }
 }
 

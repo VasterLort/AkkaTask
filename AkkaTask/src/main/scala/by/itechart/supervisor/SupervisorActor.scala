@@ -1,10 +1,16 @@
 package by.itechart.supervisor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.supervisor.actor.{CompanyActor, NewspaperActor}
 
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 class SupervisorActor extends Actor with ActorLogging {
+  implicit val timeout = Timeout(10.seconds)
   private val newspaper = context.actorOf(Props[NewspaperActor], name = "newspaper")
   private var companyNameToActor = Map.empty[String, ActorRef]
 
@@ -22,9 +28,10 @@ class SupervisorActor extends Actor with ActorLogging {
       companyActor ! UpdateMessageForUser(message, newspaper)
     case message: PrintCompanyCounter =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! UpdateCompanyCounter(message, newspaper)
+      val result = (companyActor ? UpdateCompanyCounter(message, newspaper))
+      sender ! result
     case message: PrintUserCounter =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! UpdateUserCounter(message, newspaper)
+      (companyActor ? UpdateUserCounter(message, newspaper)).mapTo[String]
   }
 }
