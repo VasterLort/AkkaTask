@@ -2,26 +2,29 @@ package by.itechart.service
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.util.Timeout
 import by.itechart.action._
-import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import javax.ws.rs.{GET, POST, Path}
+import io.swagger.v3.oas.annotations.{Operation, Parameter}
+import javax.ws.rs.{Consumes, GET, POST, Path}
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val creatingCompanyFormat = jsonFormat1(CreateCompany)
   implicit val creatingUserFormat = jsonFormat2(CreateUser)
   implicit val sendingMessageToUserFormat = jsonFormat2(SendMessageToUser)
-  implicit val creatingCompanyFormat = jsonFormat1(CreateCompany)
-  implicit val printingCompanyCounterFormat = jsonFormat1(PrintCompanyCounter)
+  implicit val printingCompanyCounterFormat = jsonFormat1(PrintCompanyCount)
+  implicit val printingUserCounterFormat = jsonFormat2(PrintUserCount)
+  implicit val userNameFormat = jsonFormat1(UserName)
+  implicit val countFormat = jsonFormat1(GetCount)
 }
 
 @Path("/supervisor")
@@ -37,14 +40,11 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
         printUserCounter
     }
 
-
   @POST
+  @Consumes(Array("application/json"))
+  @Path("companies")
   @Operation(
-    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[CreateCompany])))),
-    responses = Array(
-      new ApiResponse(responseCode = "200", description = "Hello response",
-        content = Array(new Content(schema = new Schema(implementation = classOf[CreateCompany])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
+    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[CreateCompany]))))
   )
   def createCompany =
     pathPrefix("companies") {
@@ -61,24 +61,24 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     }
 
   @POST
+  @Consumes(Array("application/json"))
+  @Path("companies/{companyName}/users")
   @Operation(
-    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[CreateUser])))),
-    responses = Array(
-      new ApiResponse(responseCode = "200", description = "Hello response",
-        content = Array(new Content(schema = new Schema(implementation = classOf[CreateUser])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
+    parameters = Array(
+      new Parameter(name = "companyName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String]))
+    ),
+    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[UserName]))))
   )
   def createUser =
-    pathPrefix("companies") {
-      pathPrefix("company") {
-        pathPrefix("users") {
-          pathEndOrSingleSlash {
-            post {
-              entity(as[CreateUser]) { record =>
-                complete {
-                  supervisor ! CreateUser(record.companyName, record.userName)
-                  HttpResponse(200)
-                }
+    pathPrefix("companies" / Segment) { companyName =>
+      pathPrefix("users") {
+        pathEndOrSingleSlash {
+          post {
+            entity(as[UserName]) { record =>
+              complete {
+                supervisor ! CreateUser(companyName, record.userName)
+                HttpResponse(200)
               }
             }
           }
@@ -87,28 +87,25 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     }
 
   @POST
+  @Consumes(Array("application/json"))
+  @Path("companies/{companyName}/users/{userName}/messages")
   @Operation(
-    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[SendMessageToUser])))),
-    responses = Array(
-      new ApiResponse(responseCode = "200", description = "Hello response",
-        content = Array(new Content(schema = new Schema(implementation = classOf[SendMessageToUser])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
+    parameters = Array(
+      new Parameter(name = "companyName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String])),
+      new Parameter(name = "userName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String]))
+    ),
   )
   def sendMessageToUser =
-    pathPrefix("companies") {
-      pathPrefix("company") {
-        pathPrefix("users") {
-          pathPrefix("user") {
-            pathPrefix("messages") {
-              pathEndOrSingleSlash {
-                post {
-                  entity(as[SendMessageToUser]) { record =>
-                    complete {
-                      supervisor ! SendMessageToUser(record.companyName, record.userName)
-                      HttpResponse(200)
-                    }
-                  }
-                }
+    pathPrefix("companies" / Segment) { companyName =>
+      pathPrefix("users" / Segment) { userName =>
+        pathPrefix("messages") {
+          pathEndOrSingleSlash {
+            post {
+              complete {
+                supervisor ! SendMessageToUser(companyName, userName)
+                HttpResponse(200)
               }
             }
           }
@@ -117,30 +114,21 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     }
 
   @GET
-  @Operation(summary = "Return Hello greeting", description = "Return Hello greeting for named user",
-    responses = Array(
-      new ApiResponse(responseCode = "200", description = "Hello response",
-        content = Array(new Content(schema = new Schema(implementation = classOf[String])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
+  @Path("companies/{companyName}/messages/count")
+  @Operation(
+    parameters = Array(
+      new Parameter(name = "companyName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String]))
+    ),
   )
   def printCompanyCounter =
-    pathPrefix("companies") {
-      pathPrefix("company") {
-        pathPrefix("users") {
-          pathPrefix("user") {
-            pathPrefix("messages") {
-              pathPrefix("number") {
-                pathEndOrSingleSlash {
-                  get {
-                    entity(as[PrintCompanyCounter]) { record =>
-                        (supervisor ? PrintCompanyCounter(record.companyName)).mapTo[String].map(response => {
-                          complete(HttpEntity(ContentTypes.`application/json`, response))
-                        }
-                        )
-                    }
-                  }
-                }
-              }
+    pathPrefix("companies" / Segment) { companyName =>
+      pathPrefix("messages") {
+        pathPrefix("count") {
+          pathEndOrSingleSlash {
+            get {
+              val res = (supervisor ? PrintCompanyCount(companyName)).mapTo[GetCount]
+              complete(res)
             }
           }
         }
@@ -148,12 +136,28 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     }
 
   @GET
-  @Path("companies/{companyName}/users/{userName}/messages/number")
+  @Consumes(Array("application/json"))
+  @Path("companies/{companyName}/users/{userName}/messages/count")
+  @Operation(
+    parameters = Array(
+      new Parameter(name = "companyName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String])),
+      new Parameter(name = "userName", in = ParameterIn.PATH, required = true,
+        schema = new Schema(implementation = classOf[String]))
+    ),
+  )
   def printUserCounter =
-    parameters(Symbol("companyName"), Symbol("userName")) { (companyName, userName) =>
-      get {
-        complete {
-          (supervisor ? PrintUserCounter(companyName, userName)).mapTo[String]
+    pathPrefix("companies" / Segment) { companyName =>
+      pathPrefix("users" / Segment) { userName =>
+        pathPrefix("messages") {
+          pathPrefix("count") {
+            pathEndOrSingleSlash {
+              get {
+                val res = (supervisor ? PrintUserCount(companyName, userName)).mapTo[GetCount]
+                complete(res)
+              }
+            }
+          }
         }
       }
     }

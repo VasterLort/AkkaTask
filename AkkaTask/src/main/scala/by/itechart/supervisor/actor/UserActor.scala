@@ -1,10 +1,9 @@
 package by.itechart.supervisor.actor
 
 import akka.actor.ActorLogging
-import akka.pattern.ask
 import akka.persistence.{PersistentActor, SnapshotOffer}
 import akka.util.Timeout
-import by.itechart.action.{CountUserMessages, UpdateMessageForUser, UpdateUserCounter}
+import by.itechart.action.{GetCount, PrintUserCount, SendMessageToUser}
 import by.itechart.event.{CounterIncrementEvent, CounterResetEvent, Event}
 
 import scala.concurrent.duration._
@@ -30,10 +29,10 @@ class UserActor(name: String) extends PersistentActor with ActorLogging {
   }
 
   override def receiveCommand: Receive = {
-    case _: UpdateMessageForUser =>
+    case _: SendMessageToUser =>
       persist(CounterIncrementEvent())(updateState)
       saveSnapshot(state)
-    case message: UpdateUserCounter =>
-      (message.newspaperActor ? CountUserMessages(message.m.userName, state.count)).mapTo[String]
+    case _: PrintUserCount =>
+      sender ! GetCount(state.count)
   }
 }

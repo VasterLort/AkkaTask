@@ -20,7 +20,7 @@ object Application extends App with RouteConcatenation {
 
   val routes =
     cors()(
-        new SupervisorService(supervisor).route ~
+      new SupervisorService(supervisor).route ~
         Swagger.routes)
 
   val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", 8080)

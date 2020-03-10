@@ -1,12 +1,13 @@
 package by.itechart.supervisor.actor
 
 import akka.actor.{ActorLogging, ActorRef, Props}
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import akka.persistence.{PersistentActor, SnapshotOffer}
 import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.event.{CounterIncrementEvent, CounterResetEvent, Event}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 case class CompanyCounter(count: Int) {
@@ -35,19 +36,19 @@ class CompanyActor(name: String) extends PersistentActor with ActorLogging {
       val ref = context.actorOf(Props(new UserActor(message.userName)), name = message.userName)
       userNameToActor += message.userName -> ref
     }
-    case message: UpdateMessageForUser => {
-      val userActor = userNameToActor(message.messageToUser.userName)
+    case message: SendMessageToUser => {
+      val userActor = userNameToActor(message.userName)
       userActor ! message
       persist(CounterIncrementEvent())(updateState)
       saveSnapshot(state)
     }
-    case message: UpdateUserCounter =>
-      val userActor = userNameToActor(message.m.userName)
-      (userActor ? message).mapTo[String]
+    case message: PrintUserCount =>
+      val userActor = userNameToActor(message.userName)
+      val result = userActor ? message
+      result.pipeTo(sender())
 
-    case message: UpdateCompanyCounter =>
-      val result = (message.newspaperActor ? CountCompanyMessages(message.m.companyName, state.count))
-      sender ! result
+    case _: PrintCompanyCount =>
+      sender ! GetCount(state.count)
   }
 }
 
