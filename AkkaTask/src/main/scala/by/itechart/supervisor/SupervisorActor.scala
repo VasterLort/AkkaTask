@@ -7,6 +7,7 @@ import by.itechart.action._
 import by.itechart.supervisor.actor.CompanyActor
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class SupervisorActor extends Actor with ActorLogging {
@@ -17,6 +18,13 @@ class SupervisorActor extends Actor with ActorLogging {
     case message: CreateCompany =>
       val ref = context.actorOf(Props(new CompanyActor(message.companyName)), name = message.companyName)
       companyNameToActor += message.companyName -> ref
+      if (ref.isInstanceOf[ActorRef]){
+        log.info("Success")
+        Future.successful(SuccessfulMessage()).pipeTo(sender())
+      }else{
+        log.info("Failed")
+        Future.successful(FailureMessage()).pipeTo(sender())
+      }
     case message: CreateUser =>
       val companyActor = companyNameToActor(message.companyName)
       companyActor ! message

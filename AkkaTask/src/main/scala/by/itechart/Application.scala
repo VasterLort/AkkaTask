@@ -3,6 +3,7 @@ package by.itechart
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.RouteConcatenation
+import by.itechart.config.ConnectionConfig
 import by.itechart.service.SupervisorService
 import by.itechart.supervisor.SupervisorActor
 import by.itechart.swagger.Swagger
@@ -23,7 +24,7 @@ object Application extends App with RouteConcatenation {
       new SupervisorService(supervisor).route ~
         Swagger.routes)
 
-  val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", 8080)
+  val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", ConnectionConfig.setConfigValues.port)
   StdIn.readLine()
   bindingFuture
     .flatMap(_.unbind())

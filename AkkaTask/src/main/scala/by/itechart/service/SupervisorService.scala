@@ -2,7 +2,7 @@ package by.itechart.service
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.util.Timeout
@@ -51,10 +51,11 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           entity(as[CreateCompany]) { record =>
-            complete {
-              supervisor ! CreateCompany(record.companyName)
-              HttpResponse(200)
+            val res = (supervisor ? CreateCompany(record.companyName)).map {
+              case _: SuccessfulMessage => HttpResponse(StatusCodes.OK)
+              case _: FailureMessage => HttpResponse(StatusCodes.BadRequest)
             }
+            complete(res)
           }
         }
       }
@@ -78,7 +79,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
             entity(as[UserName]) { record =>
               complete {
                 supervisor ! CreateUser(companyName, record.userName)
-                HttpResponse(200)
+                HttpResponse(StatusCodes.OK)
               }
             }
           }
@@ -105,7 +106,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
             post {
               complete {
                 supervisor ! SendMessageToUser(companyName, userName)
-                HttpResponse(200)
+                HttpResponse(StatusCodes.OK)
               }
             }
           }

@@ -15,3 +15,7 @@ case class PrintUserCount(companyName: String, userName: String) extends Message
 case class GetCount(count: Int) extends Message
 
 case class UserName(userName: String) extends Message
+
+case class SuccessfulMessage(val message: String = "Request was completed!!!") extends Message
+
+case class FailureMessage(val message: String = "Error!!!") extends Message
