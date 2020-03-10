@@ -32,6 +32,7 @@ class UserActor(name: String) extends PersistentActor with ActorLogging {
     case _: SendMessageToUser =>
       persist(CounterIncrementEvent())(updateState)
       saveSnapshot(state)
+      sender ! GetCount(state.count)
     case _: PrintUserCount =>
       sender ! GetCount(state.count)
   }

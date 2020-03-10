@@ -27,17 +27,15 @@ class SupervisorActor extends Actor with ActorLogging {
       }
     case message: CreateUser =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! message
+      (companyActor ? message).pipeTo(sender())
     case message: SendMessageToUser =>
       val companyActor = companyNameToActor(message.companyName)
-      companyActor ! message
+      (companyActor ? message).pipeTo(sender())
     case message: PrintCompanyCount =>
       val companyActor = companyNameToActor(message.companyName)
-      val result = companyActor ? message
-      result.pipeTo(sender())
+      (companyActor ? message).pipeTo(sender())
     case message: PrintUserCount =>
       val companyActor = companyNameToActor(message.companyName)
-      val result = companyActor ? message
-      result.pipeTo(sender())
+      (companyActor ? message).pipeTo(sender())
   }
 }

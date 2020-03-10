@@ -77,10 +77,11 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
         pathEndOrSingleSlash {
           post {
             entity(as[UserName]) { record =>
-              complete {
-                supervisor ! CreateUser(companyName, record.userName)
-                HttpResponse(StatusCodes.OK)
+              val res = (supervisor ? CreateUser(companyName, record.userName)).map {
+                case _: SuccessfulMessage => HttpResponse(StatusCodes.OK)
+                case _: FailureMessage => HttpResponse(StatusCodes.BadRequest)
               }
+              complete(res)
             }
           }
         }
@@ -104,10 +105,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
         pathPrefix("messages") {
           pathEndOrSingleSlash {
             post {
-              complete {
-                supervisor ! SendMessageToUser(companyName, userName)
-                HttpResponse(StatusCodes.OK)
-              }
+              complete((supervisor ? SendMessageToUser(companyName, userName)).mapTo[GetCount])
             }
           }
         }
@@ -128,8 +126,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
         pathPrefix("count") {
           pathEndOrSingleSlash {
             get {
-              val res = (supervisor ? PrintCompanyCount(companyName)).mapTo[GetCount]
-              complete(res)
+              complete((supervisor ? PrintCompanyCount(companyName)).mapTo[GetCount])
             }
           }
         }
@@ -154,8 +151,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
           pathPrefix("count") {
             pathEndOrSingleSlash {
               get {
-                val res = (supervisor ? PrintUserCount(companyName, userName)).mapTo[GetCount]
-                complete(res)
+                complete((supervisor ? PrintUserCount(companyName, userName)).mapTo[GetCount])
               }
             }
           }
