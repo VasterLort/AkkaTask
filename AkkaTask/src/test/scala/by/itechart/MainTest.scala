@@ -37,14 +37,14 @@ class MainTest extends TestKit(ActorSystem("system")) with AnyWordSpecLike {
       testSystem ! SendMessageToUser("Apple", "Jin2")
       testSystem ! SendMessageToUser("Ibm", "Jin1")
 
-      testSystem ! PrintCompanyCounter("Apple")
-      testSystem ! PrintCompanyCounter("Ibm")
-      testSystem ! PrintCompanyCounter("Epam")
+      testSystem ! PrintCompanyCount("Apple")
+      testSystem ! PrintCompanyCount("Ibm")
+      testSystem ! PrintCompanyCount("Epam")
 
-      testSystem ! PrintUserCounter("Epam", "Dfdf")
-      testSystem ! PrintUserCounter("Ibm", "Jin1")
-      testSystem ! PrintUserCounter("Ibm", "Sdsd")
-      testSystem ! PrintUserCounter("Apple", "Jin2")
+      testSystem ! PrintUserCount("Epam", "Dfdf")
+      testSystem ! PrintUserCount("Ibm", "Jin1")
+      testSystem ! PrintUserCount("Ibm", "Sdsd")
+      testSystem ! PrintUserCount("Apple", "Jin2")
 
       Thread.sleep(2000)
 
